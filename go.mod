@@ -1,4 +1,4 @@
-module github/valentedev/httpserver-go
+module github/valentedev/bulkbe
 
 go 1.18
 
