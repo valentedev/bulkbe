@@ -27,3 +27,8 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request)
 	message := "não encontramos o recurso desejado"
 	app.errorResponse(w, r, http.StatusNotFound, message)
 }
+
+func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+	message := "unable to update record due to an edit conflict, please try again"
+	app.errorResponse(w, r, http.StatusConflict, message)
+}

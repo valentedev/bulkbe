@@ -47,9 +47,7 @@ func (v VesselModel) Insert(vessel *Vessel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return v.DB.QueryRowContext(ctx, query, args...).Scan(
-		&vessel.ID,
-	)
+	return v.DB.QueryRowContext(ctx, query, args...).Scan(&vessel.ID)
 }
 
 func (v VesselModel) Get(id int64) (*Vessel, error) {
@@ -95,7 +93,38 @@ func (v VesselModel) GetAll() error {
 	return nil
 }
 
-func (v VesselModel) Update() error {
+func (v VesselModel) Update(vessel *Vessel) error {
+	query := `
+		UPDATE vessels
+		SET created_by = $1, name = $2, voyage = $3, service = $4, status = $5, tolerance = $6, booking = $7, internal_note = $8, external_note = $9, version = version + 1
+		WHERE id = $10
+		RETURNING id
+	`
+	args := []interface{}{
+		vessel.CreatedBy,
+		vessel.Name,
+		vessel.Voyage,
+		vessel.Service,
+		vessel.Status,
+		vessel.Tolerance,
+		vessel.Booking,
+		vessel.InternalNote,
+		vessel.ExternalNote,
+		vessel.ID,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := v.DB.QueryRowContext(ctx, query, args...).Scan(&vessel.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
 	return nil
 }
 
