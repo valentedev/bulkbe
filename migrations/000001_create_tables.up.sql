@@ -1,5 +1,5 @@
 CREATE TABLE vessels (
-    id bigint NOT NULL UNIQUE,
+    id bigserial NOT NULL UNIQUE PRIMARY KEY,
     created_at timestamp(0) with time zone DEFAULT now() NOT NULL,
     created_by character varying(50) NOT NULL,
     name character varying(50) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE vessels (
 );
 
 CREATE TABLE operations (
-    id bigint NOT NULL,
+    id bigserial NOT NULL UNIQUE PRIMARY KEY,
     created_at timestamp(0) with time zone DEFAULT now() NOT NULL,
     created_by character varying(50) NOT NULL,
     type character varying(20) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE operations (
 );
 
 CREATE TABLE orders (
-    id bigint NOT NULL,
+    id bigserial NOT NULL UNIQUE PRIMARY KEY,
     created_at timestamp(0) with time zone DEFAULT now() NOT NULL,
     created_by character varying(50) NOT NULL,
     sales_number character varying(20) NOT NULL,

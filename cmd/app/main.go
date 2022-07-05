@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"github/valentedev/bulkbe/internal/data"
 	"log"
 	"os"
 	"strings"
@@ -36,6 +37,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func main() {
@@ -71,6 +73,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	logger.Printf("%s server started on port %d", cfg.env, cfg.port)
