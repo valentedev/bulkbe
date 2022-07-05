@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -51,8 +52,43 @@ func (v VesselModel) Insert(vessel *Vessel) error {
 	)
 }
 
-func (v VesselModel) Get() error {
-	return nil
+func (v VesselModel) Get(id int64) (*Vessel, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+        SELECT id, created_by, name, voyage, service, status, tolerance, booking, internal_note, external_note
+        FROM vessels
+        WHERE id = $1`
+
+	var vessel Vessel
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := v.DB.QueryRowContext(ctx, query, id).Scan(
+		&vessel.ID,
+		&vessel.CreatedBy,
+		&vessel.Name,
+		&vessel.Voyage,
+		&vessel.Service,
+		&vessel.Status,
+		&vessel.Tolerance,
+		&vessel.Booking,
+		&vessel.InternalNote,
+		&vessel.ExternalNote,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &vessel, nil
 }
 
 func (v VesselModel) GetAll() error {

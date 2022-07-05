@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github/valentedev/bulkbe/internal/data"
 	"net/http"
@@ -33,7 +34,7 @@ func (app *application) insertVesselHandler(w http.ResponseWriter, r *http.Reque
 		Name:         input.Name,
 		Voyage:       input.Voyage,
 		Service:      input.Service,
-		Status:       input.Service,
+		Status:       input.Status,
 		Tolerance:    input.Tolerance,
 		Booking:      input.Booking,
 		InternalNote: input.InternalNote,
@@ -50,6 +51,30 @@ func (app *application) insertVesselHandler(w http.ResponseWriter, r *http.Reque
 	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", vessel.ID))
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"vessel": vessel}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) getVesselHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	vessel, err := app.models.Vessels.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"vessel": vessel}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

@@ -14,6 +14,7 @@ func (app *application) routes() http.Handler {
 
 	// Vessel Handler
 	router.HandlerFunc(http.MethodPost, "/v1/vessels", app.insertVesselHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/vessels/:id", app.getVesselHandler)
 
 	return app.recoverPanic(app.enableCORS(app.rateLimit(router)))
 }
