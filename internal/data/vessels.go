@@ -161,6 +161,27 @@ func (v VesselModel) Update(vessel *Vessel) error {
 	return nil
 }
 
-func (v VesselModel) Delete() error {
+func (v VesselModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `
+	DELETE FROM vessels
+	WHERE id = $1`
+
+	result, err := v.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
 	return nil
 }
