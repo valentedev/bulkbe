@@ -89,8 +89,41 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 	return &vessel, nil
 }
 
-func (v VesselModel) GetAll() error {
-	return nil
+func (v VesselModel) GetAll() ([]*Vessel, error) {
+	query := `
+		SELECT id, name, status, voyage
+		FROM vessels;
+	`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := v.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	vessels := []*Vessel{}
+
+	for rows.Next() {
+		var vessel Vessel
+		err := rows.Scan(
+			&vessel.ID,
+			&vessel.Name,
+			&vessel.Status,
+			&vessel.Voyage,
+		)
+		if err != nil {
+			return nil, err
+		}
+		vessels = append(vessels, &vessel)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return vessels, nil
 }
 
 func (v VesselModel) Update(vessel *Vessel) error {

@@ -14,6 +14,7 @@ func (app *application) routes() http.Handler {
 
 	// Vessel Handler
 	router.HandlerFunc(http.MethodPost, "/v1/vessels", app.insertVesselHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/vessels", app.getVesselsHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/vessels/:id", app.getVesselHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/vessels/:id", app.updateVesselHandler)
 

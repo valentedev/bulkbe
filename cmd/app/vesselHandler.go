@@ -80,6 +80,24 @@ func (app *application) getVesselHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+func (app *application) getVesselsHandler(w http.ResponseWriter, r *http.Request) {
+	vessels, err := app.models.Vessels.GetAll()
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"vessels": vessels}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 func (app *application) updateVesselHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
