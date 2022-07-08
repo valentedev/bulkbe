@@ -22,5 +22,8 @@ func (app *application) routes() http.Handler {
 	// Operation Handlers
 	router.HandlerFunc(http.MethodPost, "/v1/operations", app.insertOperationHandler)
 
+	// Order Handlers
+	router.HandlerFunc(http.MethodPost, "/v1/orders", app.insertOrderHandler)
+
 	return app.recoverPanic(app.enableCORS(app.rateLimit(router)))
 }

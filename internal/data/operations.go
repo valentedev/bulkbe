@@ -13,7 +13,7 @@ type Operation struct {
 	Port      string `json:"port"`
 	StartOp   string `json:"startop"`
 	EndOp     string `json:"endop"`
-	Vessel    int64  `json:"vessel"`
+	Vessel    int64  `json:"-"`
 }
 
 type OperationModel struct {

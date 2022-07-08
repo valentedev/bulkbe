@@ -4,22 +4,23 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
 type Vessel struct {
-	ID           int64  `json:"id"`
-	CreatedBy    string `json:"created_by"`
-	Name         string `json:"name"`
-	Voyage       string `json:"voyage"`
-	Service      string `json:"service"`
-	Status       string `json:"status"`
-	Tolerance    string `json:"tolerance"`
-	Booking      string `json:"booking"`
-	InternalNote string `json:"internal_note"`
-	ExternalNote string `json:"external_note"`
-	Operations   []Operation
-	Orders       []Order
+	ID           int64       `json:"id"`
+	CreatedBy    string      `json:"created_by"`
+	Name         string      `json:"name"`
+	Voyage       string      `json:"voyage"`
+	Service      string      `json:"service"`
+	Status       string      `json:"status"`
+	Tolerance    string      `json:"tolerance"`
+	Booking      string      `json:"booking"`
+	InternalNote string      `json:"internal_note"`
+	ExternalNote string      `json:"external_note"`
+	Operations   []Operation `json:"operations"`
+	Orders       []Order     `json:"orders"`
 }
 
 type VesselModel struct {
@@ -54,7 +55,7 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
-
+	// Vessel Query ////////////////////////
 	query := `
         SELECT id, created_by, name, voyage, service, status, tolerance, booking, internal_note, external_note
         FROM vessels
@@ -77,7 +78,6 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 		&vessel.InternalNote,
 		&vessel.ExternalNote,
 	)
-
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -86,6 +86,91 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 			return nil, err
 		}
 	}
+
+	// Operation Query ////////////////////////
+	query = `
+		SELECT id, created_by, type, port, startop, endop FROM operations
+        WHERE vessel = $1;
+	`
+
+	var operations []Operation
+
+	rows, err := v.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var operation Operation
+		err := rows.Scan(
+			&operation.ID,
+			&operation.CreatedBy,
+			&operation.Type,
+			&operation.Port,
+			&operation.StartOp,
+			&operation.EndOp,
+		)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		operations = append(operations, operation)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	vessel.Operations = operations
+
+	// Orders Query ////////////////////////
+	query = `
+		SELECT id, created_by, sales_number, purchasing_number, customer, loading_berth, destination_port, destination_berth, product, volume, sales_rep, crp FROM orders
+        WHERE vessel = $1;
+	`
+
+	var orders []Order
+
+	rows, err = v.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var order Order
+		err := rows.Scan(
+			&order.ID,
+			&order.CreatedBy,
+			&order.SalesNumber,
+			&order.PurchasingNumber,
+			&order.Customer,
+			&order.LoadingBerth,
+			&order.DestinationPort,
+			&order.DestinationBerth,
+			&order.Product,
+			&order.Volume,
+			&order.SalesRep,
+			&order.CRP,
+		)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	vessel.Orders = orders
+
 	return &vessel, nil
 }
 
