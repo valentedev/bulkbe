@@ -9,18 +9,18 @@ import (
 )
 
 type Vessel struct {
-	ID           int64       `json:"id"`
-	CreatedBy    string      `json:"created_by"`
-	Name         string      `json:"name"`
-	Voyage       string      `json:"voyage"`
-	Service      string      `json:"service"`
-	Status       string      `json:"status"`
-	Tolerance    string      `json:"tolerance"`
-	Booking      string      `json:"booking"`
-	InternalNote string      `json:"internal_note"`
-	ExternalNote string      `json:"external_note"`
-	Operations   []Operation `json:"operations"`
-	Orders       []Order     `json:"orders"`
+	ID           int64       `json:"id,omitempty"`
+	CreatedBy    string      `json:"created_by,omitempty"`
+	Name         string      `json:"name,omitempty"`
+	Voyage       string      `json:"voyage,omitempty"`
+	Service      string      `json:"service,omitempty"`
+	Status       string      `json:"status,omitempty"`
+	Tolerance    string      `json:"tolerance,omitempty"`
+	Booking      string      `json:"booking,omitempty"`
+	InternalNote string      `json:"internal_note,omitempty"`
+	ExternalNote string      `json:"external_note,omitempty"`
+	Operations   []Operation `json:"operations,omitempty"`
+	Orders       []Order     `json:"orders,omitempty"`
 }
 
 type VesselModel struct {
