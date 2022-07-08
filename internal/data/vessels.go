@@ -89,8 +89,9 @@ func (v VesselModel) Get(id int64) (*Vessel, Metadata, error) {
 
 	// Operation Query ////////////////////////
 	query = `
-		SELECT id, created_by, type, port, startop, endop FROM operations
-        WHERE vessel = $1;
+		SELECT DISTINCT ON (port) id, created_by, type, port, startop, endop FROM operations
+		WHERE vessel = $1
+		ORDER BY port, id DESC;
 	`
 
 	var operations []Operation
