@@ -63,7 +63,7 @@ func (app *application) getVesselHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	vessel, err := app.models.Vessels.Get(id)
+	vessel, metadata, err := app.models.Vessels.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -74,7 +74,7 @@ func (app *application) getVesselHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"vessel": vessel}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"vessel": vessel, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -105,7 +105,7 @@ func (app *application) updateVesselHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	vessel, err := app.models.Vessels.Get(id)
+	vessel, metadata, err := app.models.Vessels.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -155,7 +155,7 @@ func (app *application) updateVesselHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"vessel": vessel}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"vessel": vessel, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

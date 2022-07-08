@@ -51,9 +51,9 @@ func (v VesselModel) Insert(vessel *Vessel) error {
 	return v.DB.QueryRowContext(ctx, query, args...).Scan(&vessel.ID)
 }
 
-func (v VesselModel) Get(id int64) (*Vessel, error) {
+func (v VesselModel) Get(id int64) (*Vessel, Metadata, error) {
 	if id < 1 {
-		return nil, ErrRecordNotFound
+		return nil, Metadata{}, ErrRecordNotFound
 	}
 	// Vessel Query ////////////////////////
 	query := `
@@ -81,9 +81,9 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrRecordNotFound
+			return nil, Metadata{}, ErrRecordNotFound
 		default:
-			return nil, err
+			return nil, Metadata{}, err
 		}
 	}
 
@@ -97,7 +97,7 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 
 	rows, err := v.DB.QueryContext(ctx, query, id)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
@@ -114,14 +114,14 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 		)
 		if err != nil {
 			fmt.Println(err)
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		operations = append(operations, operation)
 	}
 
 	if err = rows.Err(); err != nil {
 		fmt.Println(err)
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	vessel.Operations = operations
@@ -136,7 +136,7 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 
 	rows, err = v.DB.QueryContext(ctx, query, id)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
@@ -159,19 +159,24 @@ func (v VesselModel) Get(id int64) (*Vessel, error) {
 		)
 		if err != nil {
 			fmt.Println(err)
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		orders = append(orders, order)
 	}
 
 	if err = rows.Err(); err != nil {
 		fmt.Println(err)
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	vessel.Orders = orders
 
-	return &vessel, nil
+	metadata := Metadata{
+		TotalVolume:    calcVesselVolume(vessel.Orders),
+		TotalByProduct: totalByProduct(vessel.Orders),
+	}
+
+	return &vessel, metadata, nil
 }
 
 func (v VesselModel) GetAll() ([]*Vessel, error) {
@@ -269,4 +274,31 @@ func (v VesselModel) Delete(id int64) error {
 		return ErrRecordNotFound
 	}
 	return nil
+}
+
+type Metadata struct {
+	TotalVolume    float64            `json:"total_volume"`
+	TotalByProduct map[string]float64 `json:"total_by_product"`
+}
+
+func calcVesselVolume(orders []Order) float64 {
+	var total float64
+	for i := 0; i < len(orders); i++ {
+		total = total + orders[i].Volume
+	}
+	return total
+}
+
+func totalByProduct(orders []Order) map[string]float64 {
+	productMap := map[string]float64{}
+	for i := 0; i < len(orders); i++ {
+		product := orders[i].Product
+		volume := orders[i].Volume
+		if v, ok := productMap[product]; ok {
+			productMap[product] = volume + v
+		} else {
+			productMap[product] = volume
+		}
+	}
+	return productMap
 }
