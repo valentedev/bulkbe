@@ -7,12 +7,12 @@ import (
 )
 
 type Operation struct {
-	ID        int64  `json:"id"`
-	CreatedBy string `json:"created_by"`
-	Type      string `json:"type"`
-	Port      string `json:"port"`
-	StartOp   string `json:"startop"`
-	EndOp     string `json:"endop"`
+	ID        int64  `json:"id,omitempty"`
+	CreatedBy string `json:"created_by,omitempty"`
+	Type      string `json:"type,omitempty"`
+	Port      string `json:"port,omitempty"`
+	StartOp   string `json:"startop,omitempty"`
+	EndOp     string `json:"endop,omitempty"`
 	Vessel    int64  `json:"-"`
 }
 

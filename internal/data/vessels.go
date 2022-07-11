@@ -180,10 +180,17 @@ func (v VesselModel) Get(id int64) (*Vessel, Metadata, error) {
 	return &vessel, metadata, nil
 }
 
+// type GetAllVessels struct {
+// 	ID       int64  `json:"id"`
+// 	Name     string `json:"name"`
+// 	Status   string `json:"status"`
+// 	Service  string `json:"service"`
+// 	LoadDate string `json:"load_date"`
+// }
+
 func (v VesselModel) GetAll() ([]*Vessel, error) {
 	query := `
-		SELECT id, name, status, voyage
-		FROM vessels;
+		SELECT id, name, status, service FROM vessels;
 	`
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -198,11 +205,12 @@ func (v VesselModel) GetAll() ([]*Vessel, error) {
 
 	for rows.Next() {
 		var vessel Vessel
+
 		err := rows.Scan(
 			&vessel.ID,
 			&vessel.Name,
 			&vessel.Status,
-			&vessel.Voyage,
+			&vessel.Service,
 		)
 		if err != nil {
 			return nil, err
@@ -212,6 +220,49 @@ func (v VesselModel) GetAll() ([]*Vessel, error) {
 
 	if err = rows.Err(); err != nil {
 		return nil, err
+	}
+
+	query = `
+		SELECT DISTINCT ON (vessel) id, type, port, startop, vessel 
+		FROM operations
+		WHERE type='load'
+		ORDER BY vessel;
+	`
+	rows, err = v.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	operations := []*Operation{}
+
+	for rows.Next() {
+		var operation Operation
+
+		err := rows.Scan(
+			&operation.ID,
+			&operation.Type,
+			&operation.Port,
+			&operation.StartOp,
+			&operation.Vessel,
+		)
+		if err != nil {
+			return nil, err
+		}
+		operations = append(operations, &operation)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	for i := range operations {
+		for ii := range vessels {
+			if operations[i].Vessel == vessels[ii].ID {
+				vessels[ii].Operations = append(vessels[ii].Operations, *operations[i])
+			}
+		}
+
 	}
 
 	return vessels, nil
