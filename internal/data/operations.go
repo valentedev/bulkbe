@@ -3,11 +3,13 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 )
 
 type Operation struct {
 	ID        int64  `json:"id,omitempty"`
+	CreatedAt string `json:"created_at,omitempty"`
 	CreatedBy string `json:"created_by,omitempty"`
 	Type      string `json:"type,omitempty"`
 	Port      string `json:"port,omitempty"`
@@ -40,4 +42,51 @@ func (op OperationModel) Insert(operation *Operation) error {
 	defer cancel()
 
 	return op.DB.QueryRowContext(ctx, query, args...).Scan(&operation.ID)
+}
+
+func (op OperationModel) GetLoadByVessel(id int64) ([]*Operation, error) {
+
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, created_at, port, startop, vessel 
+		FROM operations
+		WHERE type='load'
+		AND vessel=$1
+		ORDER BY created_at ASC;
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := op.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	defer rows.Close()
+	operations := []*Operation{}
+
+	for rows.Next() {
+		var operation Operation
+		err := rows.Scan(
+			&operation.ID,
+			&operation.CreatedAt,
+			&operation.Port,
+			&operation.StartOp,
+			&operation.Vessel,
+		)
+		if err != nil {
+			return nil, err
+		}
+		operations = append(operations, &operation)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return operations, nil
 }

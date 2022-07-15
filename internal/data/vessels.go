@@ -226,7 +226,7 @@ func (v VesselModel) GetAll() ([]*Vessel, error) {
 		SELECT DISTINCT ON (vessel) id, type, port, startop, vessel 
 		FROM operations
 		WHERE type='load'
-		ORDER BY vessel;
+		ORDER BY vessel DESC;
 	`
 	rows, err = v.DB.QueryContext(ctx, query)
 	if err != nil {
