@@ -21,7 +21,8 @@ func (app *application) routes() http.Handler {
 
 	// Operation Handlers
 	router.HandlerFunc(http.MethodPost, "/v1/operations", app.insertOperationHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/operations/:id", app.GetLoadByVesselHandler)
+	//router.HandlerFunc(http.MethodGet, "/v1/operations/:id", app.GetLoadByVesselHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/operations/:id", app.GetOpsByVesselHandler)
 
 	// Order Handlers
 	router.HandlerFunc(http.MethodPost, "/v1/orders", app.insertOrderHandler)
