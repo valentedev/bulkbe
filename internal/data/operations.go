@@ -109,6 +109,7 @@ func (op OperationModel) SchedulesByVessel(id int64) ([]*Schedule, error) {
 	from operations 
 	where vessel=$1
 	group by created_at
+	order by created_at desc;
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -148,10 +149,10 @@ func (op OperationModel) SchedulesByVessel(id int64) ([]*Schedule, error) {
 	// /////////////////////
 
 	query = `
-	SELECT created_at::date, port, startop
+	SELECT created_at::date, port, startop::date
 	FROM operations
 	WHERE vessel=$1
-	ORDER BY created_at ASC;
+	ORDER BY created_at DESC;
 	`
 
 	rows, err = op.DB.QueryContext(ctx, query, id)
