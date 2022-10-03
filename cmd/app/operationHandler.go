@@ -7,37 +7,44 @@ import (
 	"net/http"
 )
 
+type Input struct {
+	CreatedBy string `json:"created_by"`
+	Type      string `json:"type"`
+	Port      string `json:"port"`
+	StartOp   string `json:"startop"`
+	EndOp     string `json:"endop"`
+	Vessel    int64  `json:"vessel"`
+}
+
+var OperationRequest struct {
+	Operations []Input `json:"operations"`
+}
+
 func (app *application) insertOperationHandler(w http.ResponseWriter, r *http.Request) {
 
-	var input struct {
-		CreatedBy string `json:"created_by"`
-		Type      string `json:"type"`
-		Port      string `json:"port"`
-		StartOp   string `json:"startop"`
-		EndOp     string `json:"endop"`
-		Vessel    int64  `json:"vessel"`
-	}
-
-	err := app.readJSON(w, r, &input)
+	err := app.readJSON(w, r, &OperationRequest)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	operation := &data.Operation{
-		CreatedBy: input.CreatedBy,
-		Type:      input.Type,
-		Port:      input.Port,
-		StartOp:   input.StartOp,
-		EndOp:     input.EndOp,
-		Vessel:    input.Vessel,
-	}
+	var operation *data.Operation
 
-	err = app.models.Operations.Insert(operation)
-	if err != nil {
-		fmt.Println(err)
-		app.serverErrorResponse(w, r, err)
-		return
+	for _, v := range OperationRequest.Operations {
+		operation = &data.Operation{
+			CreatedBy: v.CreatedBy,
+			Type:      v.Type,
+			Port:      v.Port,
+			StartOp:   v.StartOp,
+			EndOp:     v.EndOp,
+			Vessel:    v.Vessel,
+		}
+		err = app.models.Operations.Insert(operation)
+		if err != nil {
+			fmt.Println(err)
+			app.serverErrorResponse(w, r, err)
+			return
+		}
 	}
 
 	headers := make(http.Header)
