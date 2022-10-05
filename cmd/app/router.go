@@ -27,5 +27,8 @@ func (app *application) routes() http.Handler {
 	// Order Handlers
 	router.HandlerFunc(http.MethodPost, "/v1/orders", app.insertOrderHandler)
 
+	// Calendar Handlers
+	router.HandlerFunc(http.MethodGet, "/v1/calendar", app.vesselsForCalendarHandler)
+
 	return app.recoverPanic(app.enableCORS(app.rateLimit(router)))
 }

@@ -354,3 +354,91 @@ func totalByProduct(orders []Order) map[string]float64 {
 	}
 	return productMap
 }
+
+// Vessels For Calendar
+func (v VesselModel) VesselsForCalendar() ([]Vessel, error) {
+
+	// Vessel Query ////////////////////////
+	query := `
+	select id, created_by, name, voyage, service, status, tolerance, booking from vessels;`
+
+	var vessels []Vessel
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := v.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var vessel Vessel
+		err := rows.Scan(
+			&vessel.ID,
+			&vessel.CreatedBy,
+			&vessel.Name,
+			&vessel.Voyage,
+			&vessel.Service,
+			&vessel.Status,
+			&vessel.Tolerance,
+			&vessel.Booking,
+		)
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return nil, ErrRecordNotFound
+			default:
+				return nil, err
+			}
+		}
+		vessels = append(vessels, vessel)
+	}
+
+	// Operation Query ////////////////////////
+	query = `
+	select distinct on (vessel, port) id, created_by, type, port, startop::date, endop::date, vessel 
+	from operations
+	order by vessel, port, startop desc
+	`
+
+	rows, err = v.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var operation Operation
+		err := rows.Scan(
+			&operation.ID,
+			&operation.CreatedBy,
+			&operation.Type,
+			&operation.Port,
+			&operation.StartOp,
+			&operation.EndOp,
+			&operation.Vessel,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for i, v := range vessels {
+			if v.ID == operation.Vessel {
+				vessels[i].Operations = append(vessels[i].Operations, operation)
+			}
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return vessels, nil
+}

@@ -184,3 +184,22 @@ func (app *application) deleteVesselHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) vesselsForCalendarHandler(w http.ResponseWriter, r *http.Request) {
+	vessels, err := app.models.Vessels.VesselsForCalendar()
+
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, vessels, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
